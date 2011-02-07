@@ -6,7 +6,9 @@
 
 (defvar *command-output* (make-synonym-stream '*standard-output*))
 
+;;; FIXME: Should be a generic function.
 (defun stringify-command-argument (argument)
+  "Convert ARGUMENT to a string suitable for passing to RUN."
   (typecase argument
     (string argument)
     (pathname (native-namestring argument))
@@ -14,6 +16,10 @@
     (t (princ-to-string argument))))
 
 (defun run (command &rest arguments)
+  "Run shell-command COMMAND with ARGUMENTS as arguments. Searches the
+PATH environment for the right command to run. Arguments are converted
+to strings with STRINGIFY-COMMAND-ARGUMENT. If the command exits with
+nonzero status, signals an error."
   (let ((process (run-program command (mapcar #'stringify-command-argument arguments)
                               :search t
                               :wait t
@@ -21,9 +27,11 @@
     (let ((code (process-exit-code process)))
       (if (zerop code)
           t
+          ;; FIXME: Raise a proper condition that can be handled.
           (error "Command exited with non-zero status ~D" code)))))
 
 (defmacro with-run-output ((stream (command &rest args)) &body body)
+  "Bind STREAM to the output stream of COMMAND and evaluate BODY."
   `(let* ((*command-output* (make-string-output-stream)))
      (run ,command ,@args)
      (with-input-from-string (,stream (get-output-stream-string  *command-output*))
@@ -52,16 +60,20 @@ working directory set to NEW-DIRECTORY."
            (ignore-errors (sb-posix:close ,fd)))))))
 
 (defmacro with-binary-run-output (pathname &body body)
+  "Evaluate BODY in an environment that binds *COMMAND-OUTPUT* to a
+binary output stream."
   `(with-open-file (*command-output* ,pathname :direction :output
                                      :element-type '(unsigned-byte 8)
                                      :if-exists :supersede)
      ,@body))
 
 (defmacro without-run-output (&body body)
+  "Evaluates BODY in an environment that discards all command output."
   `(let ((*command-output* nil))
      ,@body))
 
 (defun run-output-lines (command &rest args)
+  "Return the output of COMMAND as a list of one string per line."
   (let ((output (with-output-to-string (*command-output*)
                   (apply #'run command args))))
     (with-input-from-string (stream output)
@@ -90,6 +102,9 @@ working directory set to NEW-DIRECTORY."
   (native-namestring (merge-pathnames pathname)))
 
 (defun call-in-temporary-directory (template-pathname fun)
+  "Call FUN with the POSIX cwd and *DEFAULT-PATHNAME-DEFAULTS* set to
+a temporary directory that is unconditionally deleted when FUN
+returns, either normally or via a non-local exit."
   (flet ((random-temporary ()
            (let* ((parts (pathname-directory template-pathname))
                   (last (first (last parts)))
@@ -114,7 +129,9 @@ working directory set to NEW-DIRECTORY."
                (error condition))))))))
 
 (defmacro in-temporary-directory (template-pathname &body body)
+  "Macro-ized version of CALL-IN-TEMPORARY-DIRECTORY."
   `(call-in-temporary-directory ,template-pathname (lambda () ,@body)))
 
 (defun copy-file (from to)
+  "Copy the file FROM to the file TO."
   (run "cp" (native (truename from)) (native to)))
