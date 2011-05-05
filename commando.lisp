@@ -5,6 +5,7 @@
 ;;; "commando" goes here. Hacks and glory await!
 
 (defvar *command-output* (make-synonym-stream '*standard-output*))
+(defvar *command-error-output* (make-synonym-stream '*error-output*))
 
 ;;; FIXME: Should be a generic function.
 (defun stringify-command-argument (argument)
@@ -23,6 +24,7 @@ nonzero status, signals an error."
   (let ((process (run-program command (mapcar #'stringify-command-argument arguments)
                               :search t
                               :wait t
+                              :error *command-error-output*
                               :output *command-output*)))
     (let ((code (process-exit-code process)))
       (if (zerop code)
