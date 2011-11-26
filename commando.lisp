@@ -21,7 +21,9 @@
 PATH environment for the right command to run. Arguments are converted
 to strings with STRINGIFY-COMMAND-ARGUMENT. If the command exits with
 nonzero status, signals an error."
-  (let ((process (run-program command (mapcar #'stringify-command-argument arguments)
+  (let ((process (run-program command
+                              (mapcar #'stringify-command-argument
+                                      (flatten arguments))
                               :search t
                               :wait t
                               :error *command-error-output*

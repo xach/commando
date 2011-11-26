@@ -10,6 +10,8 @@
                           #:native-namestring)
   (:shadowing-import-from #:sb-posix
                           #:chdir)
+  (:shadowing-import-from #:alexandria
+                          #:flatten)
   (:export #:run
            #:with-run-output
            #:with-posix-cwd
