@@ -18,6 +18,8 @@
            #:with-binary-run-output
            #:without-run-output
            #:run-output-lines
+           #:call-with-temporary-directory
+           #:with-temporary-directory
            #:call-in-temporary-directory
            #:in-temporary-directory
            #:copy-file))

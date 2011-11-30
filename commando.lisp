@@ -105,10 +105,10 @@ binary output stream."
 (defun native (pathname)
   (native-namestring (merge-pathnames pathname)))
 
-(defun call-in-temporary-directory (template-pathname fun)
-  "Call FUN with the POSIX cwd and *DEFAULT-PATHNAME-DEFAULTS* set to
-a temporary directory that is unconditionally deleted when FUN
-returns, either normally or via a non-local exit."
+(defun call-with-temporary-directory (template-pathname fun)
+  "Call FUN with one argument, a temporary directory that is
+unconditionally deleted when FUN returns, either normally or via a
+non-local exit."
   (flet ((random-temporary ()
            (let* ((parts (pathname-directory template-pathname))
                   (last (first (last parts)))
@@ -123,14 +123,27 @@ returns, either normally or via a non-local exit."
                (progn
                  (sb-posix:mkdir (native path) #o700)
                  (unwind-protect
-                      (with-posix-cwd path
-                        (return (funcall fun)))
+                      (funcall fun path)
                    (ignore-errors (run "rm" "-rf" (native path)))))
              (sb-posix:syscall-error (condition)
                (when (= (sb-posix:syscall-errno condition)
                         sb-posix:eexist)
                  (go retry))
                (error condition))))))))
+
+(defmacro with-temporary-directory ((var template-pathname) &body body)
+  "Macro-ized version of CALL-WITH-TEMPORARY-DIRECTORY."
+  `(call-with-temporary-directory ,template-pathname (lambda (,var) ,@body)))
+
+(defun call-in-temporary-directory (template-pathname fun)
+  "Call FUN with the POSIX cwd and *DEFAULT-PATHNAME-DEFAULTS* set to
+a temporary directory that is unconditionally deleted when FUN
+returns, either normally or via a non-local exit."
+  (call-with-temporary-directory
+   template-pathname
+   (lambda (path)
+     (with-posix-cwd path
+       (funcall fun)))))
 
 (defmacro in-temporary-directory (template-pathname &body body)
   "Macro-ized version of CALL-IN-TEMPORARY-DIRECTORY."
