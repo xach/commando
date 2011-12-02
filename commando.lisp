@@ -87,6 +87,10 @@ binary output stream."
 
 ;;; Temporary directory work
 
+(defvar *default-temporary-template*
+  #p"/tmp/commando/"
+  "This directory is used as the basis of IN-TEMPORARY-DIRECTORY.")
+
 (defvar *random-alphanumeric*
   (concatenate 'string
                "abcdefghijklmnopqrstuvwxyz"
@@ -131,7 +135,10 @@ non-local exit."
                  (go retry))
                (error condition))))))))
 
-(defmacro with-temporary-directory ((var template-pathname) &body body)
+(defmacro with-temporary-directory ((var &optional
+                                         (template-pathname
+                                          '*default-temporary-template*))
+                                    &body body)
   "Macro-ized version of CALL-WITH-TEMPORARY-DIRECTORY."
   `(call-with-temporary-directory ,template-pathname (lambda (,var) ,@body)))
 
@@ -145,9 +152,14 @@ returns, either normally or via a non-local exit."
      (with-posix-cwd path
        (funcall fun)))))
 
-(defmacro in-temporary-directory (template-pathname &body body)
+(defmacro in-temporary-directory (&body body)
   "Macro-ized version of CALL-IN-TEMPORARY-DIRECTORY."
-  `(call-in-temporary-directory ,template-pathname (lambda () ,@body)))
+  `(call-in-temporary-directory *default-temporary-template*
+                                (lambda () ,@body)))
+
+(defmacro in-specific-temporary-directory (template-pathname &body body)
+  `(call-in-temporary-directory ,template-pathname
+                                (lambda () ,@body)))
 
 (defun copy-file (from to)
   "Copy the file FROM to the file TO."
