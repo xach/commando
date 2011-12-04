@@ -12,13 +12,15 @@
                           #:chdir)
   (:shadowing-import-from #:alexandria
                           #:flatten)
+  (:export #:*command-output*
+           #:*command-error-output*
+           #:*default-temporary-template*)
   (:export #:run
            #:with-run-output
            #:with-posix-cwd
            #:with-binary-run-output
            #:without-run-output
            #:run-output-lines
-           #:*default-temporary-template*
            #:call-with-temporary-directory
            #:with-temporary-directory
            #:call-in-temporary-directory
