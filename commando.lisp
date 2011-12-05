@@ -34,6 +34,19 @@ nonzero status, signals an error."
           ;; FIXME: Raise a proper condition that can be handled.
           (error "Command exited with non-zero status ~D" code)))))
 
+(defvar *runstring-command* '("/bin/bash" "-c")
+  "The command and argument to use to run RUNSTRING shell strings.")
+
+(defun runstring (command &rest arguments)
+  "Run COMMAND as an argument to 'sh -c'. If there are any ARGUMENTS,
+  COMMAND is treated as a format control string and used to construct
+  the final command."
+  (when arguments
+    (setf command (apply #'format nil command
+                         (mapcar #'stringify-command-argument
+                                 (flatten arguments)))))
+  (apply #'run (append *runstring-command* (list command))))
+
 (defmacro with-run-output ((stream (command &rest args)) &body body)
   "Bind STREAM to the output stream of COMMAND and evaluate BODY."
   `(let* ((*command-output* (make-string-output-stream)))

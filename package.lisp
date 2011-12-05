@@ -14,8 +14,10 @@
                           #:flatten)
   (:export #:*command-output*
            #:*command-error-output*
-           #:*default-temporary-template*)
+           #:*default-temporary-template*
+           #:*runstring-command*)
   (:export #:run
+           #:runstring
            #:with-run-output
            #:with-posix-cwd
            #:with-binary-run-output
