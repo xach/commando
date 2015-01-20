@@ -175,7 +175,7 @@ non-local exit."
                (progn
                  (sb-posix:mkdir (native path) #o700)
                  (unwind-protect
-                      (funcall fun path)
+                      (return (funcall fun path))
                    (ignore-errors (run "rm" "-rf" (native path)))))
              (sb-posix:syscall-error (condition)
                (when (= (sb-posix:syscall-errno condition)
