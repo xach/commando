@@ -18,6 +18,8 @@
            #:*runstring-command*)
   (:export #:run
            #:runstring
+           #:call-with-command-stream
+           #:with-command-stream
            #:with-run-output
            #:with-posix-cwd
            #:with-binary-run-output
